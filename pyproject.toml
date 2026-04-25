@@ -1,0 +1,24 @@
+[project]
+name = "odev"
+version = "0.0.1"
+description = "Personal development helpers focused on git workflows"
+readme = "README.md"
+authors = [
+    { name = "ooooo", email = "3164076421@qq.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+ghi = "odev.git.hide.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.7,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.12",
+    "ty>=0.0.32",
+    "typos>=1.45.1",
+]
