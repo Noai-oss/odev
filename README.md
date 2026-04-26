@@ -15,7 +15,7 @@ Personal development helpers focused on git workflows
       hooks:
         - id: commit-style-check
           name: Custom commit message style check
-          entry: uvx --from git+https://github.com/ooooo-create/odev.git@f6eaffb7a7519513baa0c1828c72b4d5afa7acb7 odev-commit-msg
+          entry: uvx --from git+https://github.com/ooooo-create/odev.git@fc9b176312086175763b5410b50c5f8c7167a2f3 odev-commit-msg
           language: system
           stages: [commit-msg]
   ```
