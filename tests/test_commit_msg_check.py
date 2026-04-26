@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from odev.git.commit_msg_check.check_commit_msg import main, validate_commit_msg
+from odev.git.commit_msg_check.check_commit_msg import validate_commit_msg, commit_msg_hook
 
 
 def test_validate_accepts_type_emoji_and_description() -> None:
@@ -52,19 +52,17 @@ def test_validate_rejects_wrong_emoji() -> None:
     ]
 
 
-def test_main_accepts_valid_commit_file(tmp_path) -> None:
+def test_commit_msg_hook_accepts_valid_commit_file(tmp_path) -> None:
     commit_msg_file = tmp_path / "COMMIT_EDITMSG"
     commit_msg_file.write_text("fix(cli): 🐛 handle missing exclude file", encoding="utf-8")
 
-    main(commit_msg_file)
+    assert commit_msg_hook([str(commit_msg_file)]) == 0
 
 
-def test_main_exits_for_invalid_commit_file(tmp_path, capsys) -> None:
+def test_commit_msg_hook_rejects_invalid_commit_file(tmp_path, capsys) -> None:
     commit_msg_file = tmp_path / "COMMIT_EDITMSG"
     commit_msg_file.write_text("feat: 🐛 wrong emoji", encoding="utf-8")
 
-    with pytest.raises(SystemExit) as exc_info:
-        main(commit_msg_file)
+    assert commit_msg_hook([str(commit_msg_file)]) == 1
 
-    assert exc_info.value.code == 1
     assert "Wrong emoji for type 'feat'" in capsys.readouterr().out
