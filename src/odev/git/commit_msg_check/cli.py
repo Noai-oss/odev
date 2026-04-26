@@ -1,4 +1,6 @@
-from .check_commit_msg import main
+from .check_commit_msg import commit_msg_hook
+import sys
 
-if __name__ == "__main__":
-    main()
+
+def hook_main():
+    sys.exit(commit_msg_hook())

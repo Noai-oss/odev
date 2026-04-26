@@ -11,7 +11,7 @@ dependencies = []
 
 [project.scripts]
 ghi = "odev.git.hide.cli:main"
-odev-commit-msg = "odev.git.commit_msg_check.cli:main"
+odev-commit-msg = "odev.git.commit_msg_check.cli:hook_main"
 
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]

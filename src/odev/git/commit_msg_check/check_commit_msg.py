@@ -1,11 +1,11 @@
-
 from __future__ import annotations
 
 import re
 import sys
 from io import TextIOWrapper
 from pathlib import Path
-
+import argparse
+from collections.abc import Sequence
 
 COMMIT_TYPES: dict[str, tuple[str, str]] = {
     "feat": ("🎉", "A new feature"),
@@ -90,22 +90,25 @@ def validate_commit_msg(commit_msg: str) -> list[str]:
     return []
 
 
-def main(commit_msg_file: str | Path | None = None) -> None:
+def commit_msg_hook(argv: Sequence[str] | None = None) -> int:
     _configure_output()
+    parser = argparse.ArgumentParser(
+        prog="odev-commit-msg",
+        description="Validate commit messages with conventional format and emojis.",
+    )
+    parser.add_argument(
+        "commit_msg_file",
+        help="Path to the commit message file provided by git/pre-commit.",
+    )
+    args = parser.parse_args(argv)
 
-    if commit_msg_file is None:
-        if len(sys.argv) != 2:
-            print("Only one argument expected: the path to the commit message file.")
-            raise SystemExit(2)
-        commit_msg_file = sys.argv[1]
-
-    commit_msg_file = Path(commit_msg_file)
-    commit_msg = commit_msg_file.read_text(encoding="utf-8")
-    errors = validate_commit_msg(commit_msg)
+    message_text = Path(args.commit_msg_file).read_text(encoding="utf-8")
+    errors = validate_commit_msg(message_text)
     if errors:
         print("[commit-msg] Invalid commit message:")
         for error in errors:
             print(f"  - {error}")
         print()
         print(_format_rules())
-        raise SystemExit(1)
+        return 1
+    return 0
