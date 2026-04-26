@@ -3,11 +3,16 @@ from __future__ import annotations
 import subprocess
 from collections.abc import Sequence
 from pathlib import Path
-
+import shutil
+import shlex
 
 class GitError(RuntimeError):
     """Raised when a git command cannot be completed."""
 
+
+
+def format_command(command: Sequence[str]) -> str:
+    return shlex.join(command)
 
 def git(
     args: Sequence[str],
@@ -16,26 +21,24 @@ def git(
     check: bool = True,
     capture: bool = True,
 ) -> subprocess.CompletedProcess[str]:
+    if shutil.which("git") is None:
+        raise GitError("git executable was not found in PATH")
+
     command = ["git", *args]
-    try:
-        result = subprocess.run(
-            command,
-            cwd=cwd,
-            text=True,
-            check=False,
-            capture_output=capture,
-        )
-    except FileNotFoundError as exc:
-        raise GitError("git executable was not found in PATH") from exc
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+        capture_output=capture,
+    )
 
     if check and result.returncode != 0:
-        message = ""
-        if result.stderr:
-            message = result.stderr.strip()
-        elif result.stdout:
-            message = result.stdout.strip()
+        message = (result.stderr or result.stdout or "").strip()
         if not message:
-            message = f"`{' '.join(command)}` failed with exit code {result.returncode}"
+            message = f"`{format_command(command)}` failed with exit code {result.returncode}"
         raise GitError(message)
 
     return result
