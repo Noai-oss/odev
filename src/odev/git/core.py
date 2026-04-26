@@ -6,13 +6,14 @@ from pathlib import Path
 import shutil
 import shlex
 
+
 class GitError(RuntimeError):
     """Raised when a git command cannot be completed."""
 
 
-
 def format_command(command: Sequence[str]) -> str:
     return shlex.join(command)
+
 
 def git(
     args: Sequence[str],
@@ -38,7 +39,9 @@ def git(
     if check and result.returncode != 0:
         message = (result.stderr or result.stdout or "").strip()
         if not message:
-            message = f"`{format_command(command)}` failed with exit code {result.returncode}"
+            message = (
+                f"`{format_command(command)}` failed with exit code {result.returncode}"
+            )
         raise GitError(message)
 
     return result

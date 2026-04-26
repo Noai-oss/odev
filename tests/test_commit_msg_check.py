@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from odev.git.commit_msg_check.check_commit_msg import validate_commit_msg, commit_msg_hook
+from odev.git.commit_msg_check.check_commit_msg import (
+    validate_commit_msg,
+    commit_msg_hook,
+)
 
 
 def test_validate_accepts_type_emoji_and_description() -> None:
@@ -54,7 +57,9 @@ def test_validate_rejects_wrong_emoji() -> None:
 
 def test_commit_msg_hook_accepts_valid_commit_file(tmp_path) -> None:
     commit_msg_file = tmp_path / "COMMIT_EDITMSG"
-    commit_msg_file.write_text("fix(cli): 🐛 handle missing exclude file", encoding="utf-8")
+    commit_msg_file.write_text(
+        "fix(cli): 🐛 handle missing exclude file", encoding="utf-8"
+    )
 
     assert commit_msg_hook([str(commit_msg_file)]) == 0
 
