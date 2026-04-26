@@ -95,7 +95,7 @@ def main(commit_msg_file: str | Path | None = None) -> None:
 
     if commit_msg_file is None:
         if len(sys.argv) != 2:
-            print("Usage: python -m odev.git.commit_msg_check.check_commit_msg <commit-msg-file>")
+            print("Only one argument expected: the path to the commit message file.")
             raise SystemExit(2)
         commit_msg_file = sys.argv[1]
 
