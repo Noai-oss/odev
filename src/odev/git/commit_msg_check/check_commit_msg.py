@@ -109,7 +109,3 @@ def main(commit_msg_file: str | Path | None = None) -> None:
         print()
         print(_format_rules())
         raise SystemExit(1)
-
-
-if __name__ == "__main__":
-    main()

@@ -7,6 +7,6 @@ repos:
     hooks:
       - id: commit-style-check
         name: Custom commit message style check
-        entry: uv run python -m odev.git.commit_msg_check.check_commit_msg
+        entry: uv run python -m odev.git.commit_msg_check.cli
         language: system
         stages: [commit-msg]
