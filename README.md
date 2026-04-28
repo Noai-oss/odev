@@ -7,7 +7,7 @@ Personal development helpers focused on git workflows
 
   ```yaml
   default_install_hook_types:
-    - pre-commit
+    # - pre-commit
     - commit-msg
 
   repos:
@@ -15,7 +15,8 @@ Personal development helpers focused on git workflows
       hooks:
         - id: commit-style-check
           name: Custom commit message style check
-          entry: uvx --from git+https://github.com/ooooo-create/odev.git@fc9b176312086175763b5410b50c5f8c7167a2f3 odev-commit-msg
-          language: system
+          entry: odev-commit-msg
+          language: python
+          additional_dependencies: ['git+https://github.com/ooooo-create/odev.git@f102c89ec364f4f5be768482b76fd24d13a28532']
           stages: [commit-msg]
   ```

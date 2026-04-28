@@ -7,9 +7,9 @@ repos:
     hooks:
       - id: commit-style-check
         name: Custom commit message style check
-        entry: odev-commit-msg
+        entry: python -m src.odev.git.commit_msg_check.cli
         language: python
-        additional_dependencies: ['git+https://github.com/ooooo-create/odev.git@fc9b176312086175763b5410b50c5f8c7167a2f3']
+        additional_dependencies: []
         stages: [commit-msg]
 
 
