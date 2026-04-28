@@ -1,0 +1,69 @@
+name: README Upgrade
+
+on:
+    schedule:
+    - cron: "0 0 * * 0" # every Sunday at midnight
+    workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  readme-upgrade:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Get latest commit-id and commit-message
+        id: get_commit_info
+        run: |
+          COMMIT_ID=$(git log --invert-grep --grep="^chore(🤖)" -n 1 --format="%H")
+          COMMIT_MESSAGE=$(git log -1 --format="%B" $COMMIT_ID)
+          echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "COMMIT_MESSAGE<<$EOF" >> $GITHUB_ENV
+          echo "$COMMIT_MESSAGE" >> $GITHUB_ENV
+          echo "$EOF" >> $GITHUB_ENV
+
+      - name: Get README's commit-style-check's commit
+        id: get_readme_commit
+        run: |
+          README_COMMIT=$(grep -oP 'git\+https://github\.com/ooooo-create/odev\.git@\K[0-9a-f]{40}' README.md || true)
+          echo "README_COMMIT=$README_COMMIT" >> $GITHUB_ENV
+
+      - name: Choose whether to update README
+        id: choose_readme_update
+        run: |
+          # If both commits are the same, skip README update
+          # TODO: whether need ancestry check?
+          if [[ "$COMMIT_ID" == "$README_COMMIT" ]]; then
+            echo "README update not needed"
+            echo "UPDATE_README=false" >> $GITHUB_ENV
+          else
+            echo "README update needed"
+            echo "UPDATE_README=true" >> $GITHUB_ENV
+
+      - name: Update README
+        if: env.UPDATE_README == 'true'
+        run: |
+          # Update the commit hash in README.md
+          sed -i "s/git+https:\/\/github\.com\/ooooo-create\/odev\.git@[0-9a-f]\{40\}/git+https:\/\/github\.com\/ooooo-create\/odev\.git@${COMMIT_ID}/g" README.md
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: README.md
+          branch: chore/upgrade-readme-commit-msg-check
+          commit-message: "chore(🤖): 🔧 upgrade odev-commit-msg's commit in README.md"
+          title: "🤖 chore: Bump odev-commit-msg's commit in `README.md`"
+          body: |
+            Automated update for odev-commit-msg's commit in README.md.
+
+            - Latest commit: ${{ env.COMMIT_ID }}
+            - Commit message: ${{ env.COMMIT_MESSAGE }}
+          delete-branch: true
