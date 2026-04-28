@@ -1,0 +1,25 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  check-title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Check PR Title
+        shell: bash -x -e -u -o pipefail {0}
+        env:
+          GITHUB_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          printf '%s\n' "$GITHUB_PULL_REQUEST_TITLE" > pr_title.txt
+          uvx --from . odev-commit-msg pr_title.txt
