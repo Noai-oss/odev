@@ -27,5 +27,25 @@ jobs:
       - name: Run Pre-commit
         uses: j178/prek-action@v2
 
+      - name: Run Commit Message Check
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --prune --depth=50 origin \
+            +refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/origin/pr
+          RANGE="origin/${{ github.base_ref }}..origin/pr"
+          git rev-list "$RANGE" --quiet || {
+            echo "No commits found in $RANGE to validate."
+            exit 0
+          }
+          while IFS= read -r sha; do
+            SUBJECT=$(git show -s --format=%B "$sha" | head -n 1)
+            TMP_MSG=$(mktemp)
+            printf '%s\n' "$SUBJECT" > "$TMP_MSG"
+            echo "Validating commit $sha: $SUBJECT"
+            uv run python -m src.odev.git.commit_msg_check.cli "$TMP_MSG"
+            rm -f "$TMP_MSG"
+          done < <(git rev-list "$RANGE")
+
       - name: Run Tests
         run: uv run pytest .
