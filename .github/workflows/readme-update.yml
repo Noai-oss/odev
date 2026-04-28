@@ -51,6 +51,7 @@ jobs:
           sed -i "s/git+https:\/\/github\.com\/ooooo-create\/odev\.git@[0-9a-f]\{40\}/git+https:\/\/github\.com\/ooooo-create\/odev\.git@${COMMIT_ID}/g" README.md
 
       - name: Create pull request
+        if: env.UPDATE_README == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           add-paths: README.md
