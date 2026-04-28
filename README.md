@@ -17,6 +17,6 @@ Personal development helpers focused on git workflows
           name: Custom commit message style check
           entry: odev-commit-msg
           language: python
-          additional_dependencies: ['git+https://github.com/ooooo-create/odev.git@f102c89ec364f4f5be768482b76fd24d13a28532']
+          additional_dependencies: ['git+https://github.com/ooooo-create/odev.git@113d9ddb2876046719720abbbc7b2de8af08c150']
           stages: [commit-msg]
   ```
