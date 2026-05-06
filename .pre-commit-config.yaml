@@ -1,0 +1,35 @@
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
+repos:
+  - repo: local
+    hooks:
+      - id: commit-style-check
+        name: Custom commit message style check
+        entry: python -m src.odev.git.commit_msg_check.cli
+        language: python
+        additional_dependencies: []
+        stages: [commit-msg]
+
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.45.2
+    hooks:
+      - id: typos
+        name: Check typos for files
+        stages: [pre-commit]
+      - id: typos
+        name: Check typos for commit messages
+        stages: [commit-msg]
+
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.15.11
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [ --fix ]
+      # Run the formatter.
+      - id: ruff-format
