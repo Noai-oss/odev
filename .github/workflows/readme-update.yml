@@ -22,7 +22,7 @@ jobs:
       - name: Get latest commit-id
         id: get_commit_info
         run: |
-          COMMIT_ID=$(git log --invert-grep --grep="^chore(🤖)" -n 1 --format="%H")
+          COMMIT_ID=$(git log --invert-grep --grep="^chore(bot)" -n 1 --format="%H")
           echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
 
       - name: Get README's commit-style-check's commit
@@ -56,8 +56,8 @@ jobs:
         with:
           add-paths: README.md
           branch: chore/upgrade-readme-commit-msg-check
-          commit-message: "chore(🤖): 🔧 upgrade odev-commit-msg's commit in README.md"
-          title: "chore(🤖): 🔧 bump odev-commit-msg's commit in `README.md`"
+          commit-message: "chore(bot): 🔧 upgrade odev-commit-msg's commit in README.md"
+          title: "chore(bot): 🔧 bump odev-commit-msg's commit in `README.md`"
           body: |
             Automated update for odev-commit-msg's commit in README.md.
 

@@ -30,8 +30,8 @@ jobs:
         with:
           add-paths: uv.lock
           branch: chore/upgrade-uv-lock
-          commit-message: "chore(🤖): 🔧 upgrade uv lock file"
-          title: "chore(🤖): 🔧 Bump `uv.lock`"
+          commit-message: "chore(bot): 🔧 upgrade uv lock file"
+          title: "chore(bot): 🔧 Bump `uv.lock`"
           body: |
             Automated weekly uv lock file upgrade.
           delete-branch: true
