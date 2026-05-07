@@ -47,9 +47,13 @@ def git(
     return result
 
 
-def ensure_repo() -> None:
+def check_inside_git_repo() -> bool:
     result = git(["rev-parse", "--is-inside-work-tree"], check=False)
-    if result.returncode != 0 or result.stdout.strip() != "true":
+    return result.returncode == 0 and result.stdout.strip() == "true"
+
+
+def ensure_repo() -> None:
+    if not check_inside_git_repo():
         raise GitError("not inside a git work tree")
 
 

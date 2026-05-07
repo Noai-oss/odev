@@ -5,9 +5,42 @@ import sys
 
 import questionary
 from odev.git.commit_msg_check.check_commit_msg import COMMIT_TYPES
+from odev.git.core import check_inside_git_repo, git
+
+
+def check_unstaged_changes() -> bool:
+    result = git(["status", "--porcelain"], check=False)
+    if result.returncode != 0:
+        return False
+
+    for line in result.stdout.splitlines():
+        if line.startswith("??") or len(line) > 1 and line[1] != " ":
+            return True
+
+    return False
 
 
 def main() -> int:
+    if not check_inside_git_repo():
+        print("Error: Not inside a git repository.", file=sys.stderr)
+        return 1
+
+    if check_unstaged_changes():
+        need_stage = questionary.confirm(
+            "You have unstaged changes. Do you want to stage them before committing?"
+        ).ask()
+        if need_stage:
+            add_result = git(["add", "-A"], check=False)
+            if add_result.returncode != 0:
+                print("Error: Failed to stage changes.", file=sys.stderr)
+                return 1
+        else:
+            print(
+                "Error: You have unstaged changes. Please stage or stash them before committing.",
+                file=sys.stderr,
+            )
+            return 1
+
     choices = [
         questionary.Choice(title=f"{emoji} {name:<8} - {desc}", value=name)
         for name, (emoji, desc) in COMMIT_TYPES.items()
