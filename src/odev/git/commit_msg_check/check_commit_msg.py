@@ -1,32 +1,22 @@
 from __future__ import annotations
 
-import re
+import argparse
 import sys
+from collections.abc import Sequence
 from io import TextIOWrapper
 from pathlib import Path
-import argparse
-from collections.abc import Sequence
 
-COMMIT_TYPES: dict[str, tuple[str, str]] = {
-    "feat": ("🎉", "A new feature"),
-    "fix": ("🐛", "A bug fix"),
-    "docs": ("📝", "Documentation only changes"),
-    "style": ("🎨", "Code style changes"),
-    "refactor": ("♻️", "Code changes that neither fix a bug nor add a feature"),
-    "perf": ("⚡", "Performance improvements"),
-    "test": ("✅", "Adding or updating tests"),
-    "build": ("📦", "Build system or dependency changes"),
-    "ci": ("👷", "CI configuration changes"),
-    "chore": ("🔧", "Other maintenance changes"),
-    "revert": ("⏪", "Revert a previous commit"),
-}
-
-COMMIT_RE = re.compile(
-    r"^(?P<type>[a-z]+)(?:\((?P<scope>[a-z0-9._/-]+)\))?(?P<breaking>!)?: "
-    r"(?P<emoji>\S+) (?P<description>.+)$"
+from ..conventional_subject import (
+    format_rules,
+    validate_conventional_subject,
 )
 
 IGNORED_PREFIXES = ("Merge ", "Revert ", "fixup! ", "squash! ")
+
+COMMIT_MSG_EXAMPLES = (
+    "feat: 🎉 initial commit with git workflow helpers",
+    "fix(cli): 🐛 handle missing exclude file",
+)
 
 
 def _configure_output() -> None:
@@ -43,51 +33,17 @@ def _subject_line(commit_msg: str) -> str:
     return ""
 
 
-def _format_rules() -> str:
-    types = "\n".join(
-        f"  {name:<8} {emoji}  {description}"
-        for name, (emoji, description) in COMMIT_TYPES.items()
-    )
-    return (
-        "Expected format:\n"
-        "  <type>(<scope>): <emoji> <description>\n"
-        "  <type>: <emoji> <description>\n\n"
-        "Examples:\n"
-        "  feat: 🎉 initial commit with git workflow helpers\n"
-        "  fix(cli): 🐛 handle missing exclude file\n\n"
-        "Allowed types:\n"
-        f"{types}"
-    )
-
-
 def validate_commit_msg(commit_msg: str) -> list[str]:
     subject = _subject_line(commit_msg)
-    if not subject:
-        return ["Commit message is empty."]
-
-    if subject.startswith(IGNORED_PREFIXES):
-        return []
-
-    match = COMMIT_RE.match(subject)
-    if not match:
-        return ["Commit subject does not match the required format."]
-
-    commit_type = match.group("type")
-    if commit_type not in COMMIT_TYPES:
-        return [f"Unsupported commit type: {commit_type!r}."]
-
-    expected_emoji = COMMIT_TYPES[commit_type][0]
-    actual_emoji = match.group("emoji")
-    if actual_emoji != expected_emoji:
-        return [
-            f"Wrong emoji for type {commit_type!r}: expected {expected_emoji}, "
-            f"got {actual_emoji}."
-        ]
-
-    if not match.group("description").strip():
-        return ["Commit description is empty."]
-
-    return []
+    return validate_conventional_subject(
+        subject,
+        empty_error="Commit message is empty.",
+        invalid_format_error="Commit subject does not match the required format.",
+        unsupported_type_error="Unsupported commit type: {conventional_type!r}.",
+        wrong_emoji_error="Wrong emoji for type {conventional_type!r}: expected {expected_emoji}, got {actual_emoji}.",
+        empty_description_error="Commit description is empty.",
+        ignored_prefixes=IGNORED_PREFIXES,
+    )
 
 
 def commit_msg_hook(argv: Sequence[str] | None = None) -> int:
@@ -109,6 +65,6 @@ def commit_msg_hook(argv: Sequence[str] | None = None) -> int:
         for error in errors:
             print(f"  - {error}")
         print()
-        print(_format_rules())
+        print(format_rules(COMMIT_MSG_EXAMPLES))
         return 1
     return 0

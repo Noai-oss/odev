@@ -22,4 +22,4 @@ jobs:
           GITHUB_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
         run: |
           printf '%s\n' "$GITHUB_PULL_REQUEST_TITLE" > pr_title.txt
-          uvx --from . odev-commit-msg pr_title.txt
+          uvx --from . odev-pr-title-check pr_title.txt
