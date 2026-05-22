@@ -28,7 +28,7 @@ jobs:
       - name: Get README's commit-style-check's commit
         id: get_readme_commit
         run: |
-          README_COMMIT=$(grep -oP 'git\+https://github\.com/Noai-oss/odev\.git@\K[0-9a-f]{40}' README.md || true)
+          README_COMMIT=$(grep -oP 'git\+https://github\.com/Noai-oss/odev\.git@\K[0-9a-f]{40}' README.md | head -n 1 || true)
           echo "README_COMMIT=$README_COMMIT" >> $GITHUB_ENV
 
       - name: Choose whether to update README
@@ -55,11 +55,11 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           add-paths: README.md
-          branch: chore/upgrade-readme-commit-msg-check
-          commit-message: "chore(bot): 🔧 upgrade odev-commit-msg's commit in README.md"
-          title: "chore(bot): 🔧 bump odev-commit-msg's commit in `README.md`"
+          branch: chore/upgrade-readme-odev-commits
+          commit-message: "chore(bot): 🔧 upgrade odev git helper commits in README.md"
+          title: "chore(bot): 🔧 bump odev git helper commits in `README.md`"
           body: |
-            Automated update for odev-commit-msg's commit in README.md.
+            Automated update for odev git workflow helpers' commits in README.md.
 
             - Latest commit: ${{ env.COMMIT_ID }}
           delete-branch: true
