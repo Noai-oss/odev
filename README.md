@@ -4,6 +4,7 @@ Personal development helpers focused on git workflows
 
 - [ghi](src/odev/git/hide/cli.py): Manage git local exclude patterns
 - [odev-commit-msg](src/odev/git/commit_msg_check/cli.py): Custom commit message checker
+- [odev-pr-title-check](src/odev/git/pr_title_check/cli.py): Custom pull request title checker
 
   - `.pre-commit-config.yaml`
 
@@ -23,7 +24,7 @@ Personal development helpers focused on git workflows
           stages: [commit-msg]
   ```
 
-  - `.github/workflows/pr-title-check.yaml`
+  - `.github/workflows/pr-title-check.yml`
 
   ```yaml
   name: PR Title Check
@@ -50,5 +51,5 @@ Personal development helpers focused on git workflows
             GITHUB_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
           run: |
             printf '%s\n' "$GITHUB_PULL_REQUEST_TITLE" > pr_title.txt
-            uvx --from git+https://github.com/Noai-oss/odev.git@e31e40245c74e14f9ee8ce1b08593cce5d319bde odev-commit-msg pr_title.txt
+            uvx --from . odev-pr-title-check pr_title.txt
   ```
