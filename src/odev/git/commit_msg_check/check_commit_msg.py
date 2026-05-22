@@ -40,6 +40,7 @@ def validate_commit_msg(commit_msg: str) -> list[str]:
         empty_error="Commit message is empty.",
         invalid_format_error="Commit subject does not match the required format.",
         unsupported_type_error="Unsupported commit type: {conventional_type!r}.",
+        wrong_emoji_error="Wrong emoji for type {conventional_type!r}: expected {expected_emoji}, got {actual_emoji}.",
         empty_description_error="Commit description is empty.",
         ignored_prefixes=IGNORED_PREFIXES,
     )

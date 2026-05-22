@@ -31,6 +31,10 @@ def validate_pr_title(pr_title: str) -> list[str]:
         unsupported_type_error=(
             "Unsupported pull request title type: {conventional_type!r}."
         ),
+        wrong_emoji_error=(
+            "Wrong emoji for pull request title type {conventional_type!r}: "
+            "expected {expected_emoji}, got {actual_emoji}."
+        ),
         empty_description_error="Pull request title description is empty.",
     )
 

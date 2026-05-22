@@ -17,6 +17,11 @@ CONVENTIONAL_TYPES: dict[str, tuple[str, str]] = {
     "revert": ("⏪", "Revert a previous commit"),
 }
 
+_ALLOWED_TYPES_STR = "\n".join(
+    f"  {name:<8} {emoji}  {description}"
+    for name, (emoji, description) in CONVENTIONAL_TYPES.items()
+)
+
 CONVENTIONAL_RE = re.compile(
     r"^(?P<type>[a-z]+)(?:\((?P<scope>[a-z0-9._/-]+)\))?(?P<breaking>!)?: "
     r"(?P<emoji>\S+) (?P<description>.+)$"
@@ -29,19 +34,17 @@ DEFAULT_EXAMPLES = (
 
 
 def format_rules(examples: Sequence[str] = DEFAULT_EXAMPLES) -> str:
-    types = "\n".join(
-        f"  {name:<8} {emoji}  {description}"
-        for name, (emoji, description) in CONVENTIONAL_TYPES.items()
-    )
     formatted_examples = "\n".join(f"  {example}" for example in examples)
     return (
         "Expected format:\n"
         "  <type>(<scope>): <emoji> <description>\n"
-        "  <type>: <emoji> <description>\n\n"
+        "  <type>(<scope>)!: <emoji> <description> (breaking change)\n"
+        "  <type>: <emoji> <description>\n"
+        "  <type>!: <emoji> <description> (breaking change)\n\n"
         "Examples:\n"
         f"{formatted_examples}\n\n"
         "Allowed types:\n"
-        f"{types}"
+        f"{_ALLOWED_TYPES_STR}"
     )
 
 
@@ -51,6 +54,7 @@ def validate_conventional_subject(
     empty_error: str,
     invalid_format_error: str,
     unsupported_type_error: str,
+    wrong_emoji_error: str,
     empty_description_error: str,
     ignored_prefixes: Sequence[str] = (),
 ) -> list[str]:
@@ -72,8 +76,11 @@ def validate_conventional_subject(
     actual_emoji = match.group("emoji")
     if actual_emoji != expected_emoji:
         return [
-            f"Wrong emoji for type {conventional_type!r}: expected {expected_emoji}, "
-            f"got {actual_emoji}."
+            wrong_emoji_error.format(
+                conventional_type=conventional_type,
+                expected_emoji=expected_emoji,
+                actual_emoji=actual_emoji,
+            )
         ]
 
     if not match.group("description").strip():

@@ -32,6 +32,12 @@ def test_validate_pr_title_rejects_unsupported_type() -> None:
     ]
 
 
+def test_validate_pr_title_rejects_wrong_emoji() -> None:
+    assert validate_pr_title("feat: 🐛 wrong emoji") == [
+        "Wrong emoji for pull request title type 'feat': expected 🎉, got 🐛."
+    ]
+
+
 def test_pr_title_hook_reports_pr_title_context(tmp_path, capsys) -> None:
     pr_title_file = tmp_path / "pr_title.txt"
     pr_title_file.write_text("feat: 🐛 wrong emoji", encoding="utf-8")
@@ -40,7 +46,7 @@ def test_pr_title_hook_reports_pr_title_context(tmp_path, capsys) -> None:
 
     output = capsys.readouterr().out
     assert "[pr-title-check] Invalid pull request title:" in output
-    assert "Wrong emoji for type 'feat'" in output
+    assert "Wrong emoji for pull request title type 'feat'" in output
     assert "commit message" not in output.lower()
     assert "odev-commit-msg" not in output
 
