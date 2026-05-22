@@ -14,6 +14,7 @@ def test_validate_pr_title_accepts_type_emoji_and_description() -> None:
 
 def test_validate_pr_title_accepts_scope_and_breaking_marker() -> None:
     assert validate_pr_title("ci(pr-title)!: 👷 require styled PR titles") == []
+    assert validate_pr_title("feat(API): 🎉 support uppercase scope") == []
 
 
 def test_validate_pr_title_rejects_empty_title() -> None:
@@ -35,6 +36,12 @@ def test_validate_pr_title_rejects_unsupported_type() -> None:
 def test_validate_pr_title_rejects_wrong_emoji() -> None:
     assert validate_pr_title("feat: 🐛 wrong emoji") == [
         "Wrong emoji for pull request title type 'feat': expected 🎉, got 🐛."
+    ]
+
+
+def test_validate_pr_title_rejects_missing_emoji() -> None:
+    assert validate_pr_title("feat: add database helpers") == [
+        "Wrong emoji for pull request title type 'feat': expected 🎉, got add."
     ]
 
 

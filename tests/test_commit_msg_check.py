@@ -14,6 +14,7 @@ def test_validate_accepts_type_emoji_and_description() -> None:
 
 def test_validate_accepts_scope_and_breaking_marker() -> None:
     assert validate_commit_msg("fix(git/hook)!: 🐛 reject invalid messages") == []
+    assert validate_commit_msg("feat(API): 🎉 support uppercase scope") == []
 
 
 def test_validate_uses_first_non_comment_line() -> None:
@@ -52,6 +53,12 @@ def test_validate_rejects_unsupported_type() -> None:
 def test_validate_rejects_wrong_emoji() -> None:
     assert validate_commit_msg("feat: 🐛 wrong emoji") == [
         "Wrong emoji for type 'feat': expected 🎉, got 🐛."
+    ]
+
+
+def test_validate_rejects_missing_emoji() -> None:
+    assert validate_commit_msg("feat: add database helpers") == [
+        "Wrong emoji for type 'feat': expected 🎉, got add."
     ]
 
 
