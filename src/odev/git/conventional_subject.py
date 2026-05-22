@@ -22,9 +22,15 @@ _ALLOWED_TYPES_STR = "\n".join(
     for name, (emoji, description) in CONVENTIONAL_TYPES.items()
 )
 
+# Matches: <type>(<scope>)!: <emoji> <description>, with a single space after
+# the colon and emoji; scope and ! are optional, type is lowercase, and scope
+# may use letters, digits, dots, underscores, slashes, or hyphens.
 CONVENTIONAL_RE = re.compile(
-    r"^(?P<type>[a-z]+)(?:\((?P<scope>[a-z0-9._/-]+)\))?(?P<breaking>!)?: "
-    r"(?P<emoji>\S+) (?P<description>.+)$"
+    r"^(?P<type>[a-z]+)"
+    r"(?:\((?P<scope>[a-zA-Z0-9._/-]+)\))?"
+    r"(?P<breaking>!)?: "
+    r"(?P<emoji>\S+) "
+    r"(?P<description>.+)$"
 )
 
 DEFAULT_EXAMPLES = (
