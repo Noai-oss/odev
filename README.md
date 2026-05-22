@@ -51,5 +51,5 @@ Personal development helpers focused on git workflows
             GITHUB_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
           run: |
             printf '%s\n' "$GITHUB_PULL_REQUEST_TITLE" > pr_title.txt
-            uvx --from . odev-pr-title-check pr_title.txt
+            uvx --from git+https://github.com/Noai-oss/odev.git@4a68fdf2f193888e6c10c7ac575746292aabe4f4 odev-pr-title-check pr_title.txt
   ```
