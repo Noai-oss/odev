@@ -62,8 +62,7 @@ def git_path(path: str) -> Path:
     result = git(
         [
             "rev-parse",
-            "--path-format",
-            "absolute",
+            "--path-format=absolute",
             "--git-path",
             path,
         ]
