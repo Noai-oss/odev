@@ -3,6 +3,7 @@
 Personal development helpers focused on git workflows
 
 - [ghi](src/odev/git/hide/cli.py): Manage git local exclude patterns
+- [odev-commit](src/odev/git/commit/cli.py): Create styled commits; run `odev-commit reuse` to commit with the last cached message
 - [odev-commit-msg](src/odev/git/commit_msg_check/cli.py): Custom commit message checker
 - [odev-pr-title-check](src/odev/git/pr_title_check/cli.py): Custom pull request title checker
 
