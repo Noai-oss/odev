@@ -21,7 +21,7 @@ Personal development helpers focused on git workflows
           name: Custom commit message style check
           entry: odev-commit-msg
           language: python
-          additional_dependencies: ['git+https://github.com/Noai-oss/odev.git@e079c9b985e6235c250f6ab1259e05ef24029533']
+          additional_dependencies: ['git+https://github.com/Noai-oss/odev.git@881a3faba06e24bd6895acc27d5dfe7e78fe8175']
           stages: [commit-msg]
   ```
 
@@ -52,5 +52,5 @@ Personal development helpers focused on git workflows
             GITHUB_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
           run: |
             printf '%s\n' "$GITHUB_PULL_REQUEST_TITLE" > pr_title.txt
-            uvx --from git+https://github.com/Noai-oss/odev.git@e079c9b985e6235c250f6ab1259e05ef24029533 odev-pr-title-check pr_title.txt
+            uvx --from git+https://github.com/Noai-oss/odev.git@881a3faba06e24bd6895acc27d5dfe7e78fe8175 odev-pr-title-check pr_title.txt
   ```
