@@ -22,15 +22,20 @@ _ALLOWED_TYPES_STR = "\n".join(
     for name, (emoji, description) in CONVENTIONAL_TYPES.items()
 )
 
-# Matches: <type>(<scope>)!: <emoji> <description>, with a single space after
-# the colon and emoji; scope and ! are optional, type is lowercase, and scope
-# may use letters, digits, dots, underscores, slashes, or hyphens.
-CONVENTIONAL_RE = re.compile(
+# Matches: <type>(<scope>)!: <description>; scope and ! are optional, type is
+# lowercase, and scope may use letters, digits, dots, underscores, slashes, or
+# hyphens.
+_CONVENTIONAL_PREFIX = (
     r"^(?P<type>[a-z]+)"
     r"(?:\((?P<scope>[a-zA-Z0-9._/-]+)\))?"
     r"(?P<breaking>!)?: "
-    r"(?P<emoji>\S+) "
-    r"(?P<description>.+)$"
+)
+
+CONVENTIONAL_WITH_EMOJI_RE = re.compile(
+    _CONVENTIONAL_PREFIX + r"(?P<emoji>\S+) (?P<description>.+)$"
+)
+CONVENTIONAL_WITHOUT_EMOJI_RE = re.compile(
+    _CONVENTIONAL_PREFIX + r"(?P<description>.+)$"
 )
 
 DEFAULT_EXAMPLES = (
@@ -39,14 +44,22 @@ DEFAULT_EXAMPLES = (
 )
 
 
-def format_rules(examples: Sequence[str] = DEFAULT_EXAMPLES) -> str:
+def format_rules(
+    examples: Sequence[str] = DEFAULT_EXAMPLES,
+    *,
+    require_emoji: bool = True,
+) -> str:
     formatted_examples = "\n".join(f"  {example}" for example in examples)
+    emoji_part = "<emoji> " if require_emoji else ""
+    expected_format = (
+        f"  <type>(<scope>): {emoji_part}<description>\n"
+        f"  <type>(<scope>)!: {emoji_part}<description> (breaking change)\n"
+        f"  <type>: {emoji_part}<description>\n"
+        f"  <type>!: {emoji_part}<description> (breaking change)\n\n"
+    )
     return (
         "Expected format:\n"
-        "  <type>(<scope>): <emoji> <description>\n"
-        "  <type>(<scope>)!: <emoji> <description> (breaking change)\n"
-        "  <type>: <emoji> <description>\n"
-        "  <type>!: <emoji> <description> (breaking change)\n\n"
+        f"{expected_format}"
         "Examples:\n"
         f"{formatted_examples}\n\n"
         "Allowed types:\n"
@@ -63,6 +76,7 @@ def validate_conventional_subject(
     wrong_emoji_error: str,
     empty_description_error: str,
     ignored_prefixes: Sequence[str] = (),
+    require_emoji: bool = True,
 ) -> list[str]:
     if not subject:
         return [empty_error]
@@ -70,7 +84,9 @@ def validate_conventional_subject(
     if subject.startswith(tuple(ignored_prefixes)):
         return []
 
-    match = CONVENTIONAL_RE.match(subject)
+    match = (
+        CONVENTIONAL_WITH_EMOJI_RE if require_emoji else CONVENTIONAL_WITHOUT_EMOJI_RE
+    ).match(subject)
     if not match:
         return [invalid_format_error]
 
@@ -78,16 +94,17 @@ def validate_conventional_subject(
     if conventional_type not in CONVENTIONAL_TYPES:
         return [unsupported_type_error.format(conventional_type=conventional_type)]
 
-    expected_emoji = CONVENTIONAL_TYPES[conventional_type][0]
-    actual_emoji = match.group("emoji")
-    if actual_emoji != expected_emoji:
-        return [
-            wrong_emoji_error.format(
-                conventional_type=conventional_type,
-                expected_emoji=expected_emoji,
-                actual_emoji=actual_emoji,
-            )
-        ]
+    if require_emoji:
+        expected_emoji = CONVENTIONAL_TYPES[conventional_type][0]
+        actual_emoji = match.group("emoji")
+        if actual_emoji != expected_emoji:
+            return [
+                wrong_emoji_error.format(
+                    conventional_type=conventional_type,
+                    expected_emoji=expected_emoji,
+                    actual_emoji=actual_emoji,
+                )
+            ]
 
     if not match.group("description").strip():
         return [empty_description_error]

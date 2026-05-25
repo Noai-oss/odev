@@ -142,6 +142,26 @@ def test_prompt_commit_message_requires_description(monkeypatch) -> None:
     assert validators[0]("retry commit") is True
 
 
+def test_prompt_commit_message_can_omit_emoji(monkeypatch) -> None:
+    monkeypatch.setattr(
+        cli.questionary,
+        "select",
+        lambda message, choices: SimpleNamespace(ask=lambda: "fix"),
+    )
+
+    def fake_text(message: str, **kwargs):
+        if "description" in message:
+            return SimpleNamespace(ask=lambda: "retry commit")
+        return SimpleNamespace(ask=lambda: "cli")
+
+    monkeypatch.setattr(cli.questionary, "text", fake_text)
+
+    assert cli.prompt_commit_message(include_emoji=False) == (
+        "fix(cli): retry commit",
+        0,
+    )
+
+
 def test_prompt_commit_message_treats_cancelled_description_as_cancel(
     monkeypatch,
 ) -> None:
@@ -208,3 +228,18 @@ def test_main_routes_reuse_command(monkeypatch) -> None:
 
     assert cli.main(["reuse"]) == 0
     assert calls == ["reuse"]
+
+
+def test_main_passes_ignore_emoji_to_interactive_commit(monkeypatch) -> None:
+    include_emoji_values: list[bool] = []
+
+    monkeypatch.setattr(cli, "check_inside_git_repo", lambda: True)
+    monkeypatch.setattr(cli, "prepare_index", lambda: None)
+    monkeypatch.setattr(
+        cli,
+        "interactive_commit",
+        lambda *, include_emoji: include_emoji_values.append(include_emoji) or 0,
+    )
+
+    assert cli.main(["--ignore-emoji"]) == 0
+    assert include_emoji_values == [False]

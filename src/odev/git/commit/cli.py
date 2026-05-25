@@ -83,9 +83,16 @@ def confirm_commit() -> bool:
     return confirm is True
 
 
-def prompt_commit_message() -> tuple[str | None, int]:
+def prompt_commit_message(*, include_emoji: bool = True) -> tuple[str | None, int]:
     choices = [
-        questionary.Choice(title=f"{emoji} {name:<8} - {desc}", value=name)
+        questionary.Choice(
+            title=(
+                f"{emoji} {name:<8} - {desc}"
+                if include_emoji
+                else f"{name:<8} - {desc}"
+            ),
+            value=name,
+        )
         for name, (emoji, desc) in CONVENTIONAL_TYPES.items()
     ]
 
@@ -113,13 +120,16 @@ def prompt_commit_message() -> tuple[str | None, int]:
     if not desc:
         return None, 0
 
-    emoji = CONVENTIONAL_TYPES[commit_type][0]
     scope_str = f"({scope})" if scope else ""
-    return f"{commit_type}{scope_str}: {emoji} {desc}", 0
+    if include_emoji:
+        emoji = CONVENTIONAL_TYPES[commit_type][0]
+        return f"{commit_type}{scope_str}: {emoji} {desc}", 0
+
+    return f"{commit_type}{scope_str}: {desc}", 0
 
 
-def interactive_commit() -> int:
-    commit_msg, prompt_result = prompt_commit_message()
+def interactive_commit(*, include_emoji: bool = True) -> int:
+    commit_msg, prompt_result = prompt_commit_message(include_emoji=include_emoji)
     if not commit_msg:
         return prompt_result
 
@@ -154,6 +164,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         prog="odev-commit",
         description="Create styled git commits with a guided prompt.",
     )
+    parser.add_argument(
+        "--ignore-emoji",
+        action="store_true",
+        help="Create commit messages without an emoji.",
+    )
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser(
         "reuse",
@@ -172,7 +187,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "reuse":
         return reuse_last_commit_message()
 
-    return interactive_commit()
+    return interactive_commit(include_emoji=not args.ignore_emoji)
 
 
 if __name__ == "__main__":

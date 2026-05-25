@@ -18,6 +18,11 @@ COMMIT_MSG_EXAMPLES = (
     "fix(cli): 🐛 handle missing exclude file",
 )
 
+COMMIT_MSG_NO_EMOJI_EXAMPLES = (
+    "feat: add git workflow helpers",
+    "fix(cli): handle missing exclude file",
+)
+
 
 def _configure_output() -> None:
     for stream in (sys.stdout, sys.stderr):
@@ -33,7 +38,11 @@ def _subject_line(commit_msg: str) -> str:
     return ""
 
 
-def validate_commit_msg(commit_msg: str) -> list[str]:
+def validate_commit_msg(
+    commit_msg: str,
+    *,
+    require_emoji: bool = True,
+) -> list[str]:
     subject = _subject_line(commit_msg)
     return validate_conventional_subject(
         subject,
@@ -43,6 +52,7 @@ def validate_commit_msg(commit_msg: str) -> list[str]:
         wrong_emoji_error="Wrong emoji for type {conventional_type!r}: expected {expected_emoji}, got {actual_emoji}.",
         empty_description_error="Commit description is empty.",
         ignored_prefixes=IGNORED_PREFIXES,
+        require_emoji=require_emoji,
     )
 
 
@@ -53,18 +63,27 @@ def commit_msg_hook(argv: Sequence[str] | None = None) -> int:
         description="Validate commit messages with conventional format and emojis.",
     )
     parser.add_argument(
+        "--ignore-emoji",
+        action="store_true",
+        help="Allow commit messages without an emoji and skip emoji validation.",
+    )
+    parser.add_argument(
         "commit_msg_file",
         help="Path to the commit message file provided by git/pre-commit.",
     )
     args = parser.parse_args(argv)
 
     message_text = Path(args.commit_msg_file).read_text(encoding="utf-8")
-    errors = validate_commit_msg(message_text)
+    require_emoji = not args.ignore_emoji
+    errors = validate_commit_msg(message_text, require_emoji=require_emoji)
     if errors:
         print("[commit-msg] Invalid commit message:")
         for error in errors:
             print(f"  - {error}")
         print()
-        print(format_rules(COMMIT_MSG_EXAMPLES))
+        examples = (
+            COMMIT_MSG_EXAMPLES if require_emoji else COMMIT_MSG_NO_EMOJI_EXAMPLES
+        )
+        print(format_rules(examples, require_emoji=require_emoji))
         return 1
     return 0

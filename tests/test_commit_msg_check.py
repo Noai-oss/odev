@@ -62,6 +62,20 @@ def test_validate_rejects_missing_emoji() -> None:
     ]
 
 
+def test_validate_accepts_missing_emoji_when_not_required() -> None:
+    assert validate_commit_msg("feat: add database helpers", require_emoji=False) == []
+    assert (
+        validate_commit_msg(
+            "fix(git/hook)!: reject invalid messages", require_emoji=False
+        )
+        == []
+    )
+
+
+def test_validate_accepts_wrong_emoji_when_not_required() -> None:
+    assert validate_commit_msg("feat: 🐛 wrong emoji", require_emoji=False) == []
+
+
 def test_commit_msg_hook_accepts_valid_commit_file(tmp_path) -> None:
     commit_msg_file = tmp_path / "COMMIT_EDITMSG"
     commit_msg_file.write_text(
@@ -71,6 +85,15 @@ def test_commit_msg_hook_accepts_valid_commit_file(tmp_path) -> None:
     assert commit_msg_hook([str(commit_msg_file)]) == 0
 
 
+def test_commit_msg_hook_accepts_no_emoji_with_flag(tmp_path) -> None:
+    commit_msg_file = tmp_path / "COMMIT_EDITMSG"
+    commit_msg_file.write_text(
+        "fix(cli): handle missing exclude file", encoding="utf-8"
+    )
+
+    assert commit_msg_hook(["--ignore-emoji", str(commit_msg_file)]) == 0
+
+
 def test_commit_msg_hook_rejects_invalid_commit_file(tmp_path, capsys) -> None:
     commit_msg_file = tmp_path / "COMMIT_EDITMSG"
     commit_msg_file.write_text("feat: 🐛 wrong emoji", encoding="utf-8")
@@ -78,3 +101,14 @@ def test_commit_msg_hook_rejects_invalid_commit_file(tmp_path, capsys) -> None:
     assert commit_msg_hook([str(commit_msg_file)]) == 1
 
     assert "Wrong emoji for type 'feat'" in capsys.readouterr().out
+
+
+def test_commit_msg_hook_uses_no_emoji_rules_with_flag(tmp_path, capsys) -> None:
+    commit_msg_file = tmp_path / "COMMIT_EDITMSG"
+    commit_msg_file.write_text("fix missing separator", encoding="utf-8")
+
+    assert commit_msg_hook(["--ignore-emoji", str(commit_msg_file)]) == 1
+
+    output = capsys.readouterr().out
+    assert "<type>: <description>" in output
+    assert "<type>: <emoji> <description>" not in output
