@@ -3,7 +3,7 @@
 Personal development helpers focused on git workflows
 
 - [ghi](src/odev/git/hide/cli.py): Manage git local exclude patterns
-- [odev-commit](src/odev/git/commit/cli.py): Create styled commits; add `--ignore-emoji` to generate messages without emojis; run `odev-commit reuse` to commit with the last cached message
+- [odev-commit](src/odev/git/commit/cli.py): Create styled commits; add `-i/--ignore-emoji` to generate messages without emojis; add `-s/--signoff` to pass `git commit -s`; run `odev-commit reuse [-s]` or `odev-commit [-s] reuse` to commit with the last cached message
 - [odev-commit-msg](src/odev/git/commit_msg_check/cli.py): Custom commit message checker
 - [odev-pr-title-check](src/odev/git/pr_title_check/cli.py): Custom pull request title checker
 
@@ -22,7 +22,7 @@ Personal development helpers focused on git workflows
           entry: odev-commit-msg
           language: python
           additional_dependencies: ['git+https://github.com/Noai-oss/odev.git@881a3faba06e24bd6895acc27d5dfe7e78fe8175']
-          # args: [--ignore-emoji]
+          # args: [-i]
           stages: [commit-msg]
   ```
 
@@ -53,6 +53,6 @@ Personal development helpers focused on git workflows
             GITHUB_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
           run: |
             printf '%s\n' "$GITHUB_PULL_REQUEST_TITLE" > pr_title.txt
-            # Add --ignore-emoji after odev-pr-title-check to allow titles without emojis.
+            # Add -i/--ignore-emoji after odev-pr-title-check to allow titles without emojis.
             uvx --from git+https://github.com/Noai-oss/odev.git@881a3faba06e24bd6895acc27d5dfe7e78fe8175 odev-pr-title-check pr_title.txt
   ```

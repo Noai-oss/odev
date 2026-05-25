@@ -63,6 +63,7 @@ def commit_msg_hook(argv: Sequence[str] | None = None) -> int:
         description="Validate commit messages with conventional format and emojis.",
     )
     parser.add_argument(
+        "-i",
         "--ignore-emoji",
         action="store_true",
         help="Allow commit messages without an emoji and skip emoji validation.",

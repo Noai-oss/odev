@@ -64,18 +64,26 @@ def prepare_index() -> int | None:
     return None
 
 
-def run_commit(commit_msg: str) -> int:
+def run_commit(commit_msg: str, *, signoff: bool = False) -> int:
     if not commit_msg.strip():
         print("Error: Commit message is empty.", file=sys.stderr)
         return 1
 
     save_last_commit_message(commit_msg)
-    result = subprocess.run(["git", "commit", "-F", str(last_commit_message_path())])
+    command = ["git", "commit"]
+    if signoff:
+        command.append("-s")
+    command.extend(["-F", str(last_commit_message_path())])
+    result = subprocess.run(command)
     return result.returncode
 
 
 def require_description(value: str) -> bool | str:
-    return bool(value.strip()) or "Description is required."
+    if not value.strip():
+        return "Description is required."
+    if "\n" in value or "\r" in value:
+        return "Description must be a single line."
+    return True
 
 
 def confirm_commit() -> bool:
@@ -128,7 +136,11 @@ def prompt_commit_message(*, include_emoji: bool = True) -> tuple[str | None, in
     return f"{commit_type}{scope_str}: {desc}", 0
 
 
-def interactive_commit(*, include_emoji: bool = True) -> int:
+def interactive_commit(
+    *,
+    include_emoji: bool = True,
+    signoff: bool = False,
+) -> int:
     commit_msg, prompt_result = prompt_commit_message(include_emoji=include_emoji)
     if not commit_msg:
         return prompt_result
@@ -139,10 +151,10 @@ def interactive_commit(*, include_emoji: bool = True) -> int:
         print("Commit aborted.")
         return 0
 
-    return run_commit(commit_msg)
+    return run_commit(commit_msg, signoff=signoff)
 
 
-def reuse_last_commit_message() -> int:
+def reuse_last_commit_message(*, signoff: bool = False) -> int:
     commit_msg = load_last_commit_message()
     if not commit_msg:
         print(
@@ -156,15 +168,27 @@ def reuse_last_commit_message() -> int:
         print("Commit aborted.")
         return 0
 
-    return run_commit(commit_msg)
+    return run_commit(commit_msg, signoff=signoff)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    signoff_help = "Pass -s/--signoff to git commit."
+    signoff_parser = argparse.ArgumentParser(add_help=False)
+    signoff_parser.add_argument(
+        "-s",
+        "--signoff",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help=signoff_help,
+    )
     parser = argparse.ArgumentParser(
         prog="odev-commit",
+        usage="%(prog)s [options] [reuse]",
         description="Create styled git commits with a guided prompt.",
+        parents=[signoff_parser],
     )
     parser.add_argument(
+        "-i",
         "--ignore-emoji",
         action="store_true",
         help="Create commit messages without an emoji.",
@@ -172,9 +196,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser(
         "reuse",
+        prog="odev-commit reuse",
+        parents=[signoff_parser],
         help="Commit with the last cached odev-commit message.",
     )
     args = parser.parse_args(argv)
+    signoff = getattr(args, "signoff", False)
 
     if not check_inside_git_repo():
         print("Error: Not inside a git repository.", file=sys.stderr)
@@ -185,9 +212,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         return prepare_result
 
     if args.command == "reuse":
-        return reuse_last_commit_message()
+        return reuse_last_commit_message(signoff=signoff)
 
-    return interactive_commit(include_emoji=not args.ignore_emoji)
+    return interactive_commit(
+        include_emoji=not args.ignore_emoji,
+        signoff=signoff,
+    )
 
 
 if __name__ == "__main__":

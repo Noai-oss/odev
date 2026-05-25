@@ -94,6 +94,15 @@ def test_commit_msg_hook_accepts_no_emoji_with_flag(tmp_path) -> None:
     assert commit_msg_hook(["--ignore-emoji", str(commit_msg_file)]) == 0
 
 
+def test_commit_msg_hook_accepts_no_emoji_with_alias(tmp_path) -> None:
+    commit_msg_file = tmp_path / "COMMIT_EDITMSG"
+    commit_msg_file.write_text(
+        "fix(cli): handle missing exclude file", encoding="utf-8"
+    )
+
+    assert commit_msg_hook(["-i", str(commit_msg_file)]) == 0
+
+
 def test_commit_msg_hook_rejects_invalid_commit_file(tmp_path, capsys) -> None:
     commit_msg_file = tmp_path / "COMMIT_EDITMSG"
     commit_msg_file.write_text("feat: 🐛 wrong emoji", encoding="utf-8")
