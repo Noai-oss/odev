@@ -45,6 +45,27 @@ def test_validate_pr_title_rejects_missing_emoji() -> None:
     ]
 
 
+def test_validate_pr_title_accepts_missing_emoji_when_not_required() -> None:
+    assert validate_pr_title("feat: add database helpers", require_emoji=False) == []
+    assert (
+        validate_pr_title(
+            "ci(pr-title)!: require styled PR titles", require_emoji=False
+        )
+        == []
+    )
+
+
+def test_validate_pr_title_accepts_wrong_emoji_when_not_required() -> None:
+    assert validate_pr_title("feat: 🐛 wrong emoji", require_emoji=False) == []
+
+
+def test_pr_title_hook_accepts_no_emoji_with_flag(tmp_path) -> None:
+    pr_title_file = tmp_path / "pr_title.txt"
+    pr_title_file.write_text("feat: add PR title checker", encoding="utf-8")
+
+    assert pr_title_hook(["--ignore-emoji", str(pr_title_file)]) == 0
+
+
 def test_pr_title_hook_reports_pr_title_context(tmp_path, capsys) -> None:
     pr_title_file = tmp_path / "pr_title.txt"
     pr_title_file.write_text("feat: 🐛 wrong emoji", encoding="utf-8")
@@ -56,6 +77,18 @@ def test_pr_title_hook_reports_pr_title_context(tmp_path, capsys) -> None:
     assert "Wrong emoji for pull request title type 'feat'" in output
     assert "commit message" not in output.lower()
     assert "odev-commit-msg" not in output
+
+
+def test_pr_title_hook_uses_no_emoji_rules_with_flag(tmp_path, capsys) -> None:
+    pr_title_file = tmp_path / "pr_title.txt"
+    pr_title_file.write_text("fix missing separator", encoding="utf-8")
+
+    assert pr_title_hook(["--ignore-emoji", str(pr_title_file)]) == 1
+
+    output = capsys.readouterr().out
+    assert "<type>: <description>" in output
+    assert "<type>: <emoji> <description>" not in output
+    assert "commit message" not in output.lower()
 
 
 def test_pr_title_hook_help_uses_pr_title_command(capsys) -> None:
