@@ -22,22 +22,20 @@ _ALLOWED_TYPES_STR = "\n".join(
     for name, (emoji, description) in CONVENTIONAL_TYPES.items()
 )
 
-# Matches: <type>(<scope>)!: <emoji> <description>, with a single space after
-# the colon and emoji; scope and ! are optional, type is lowercase, and scope
-# may use letters, digits, dots, underscores, slashes, or hyphens.
-CONVENTIONAL_WITH_EMOJI_RE = re.compile(
+# Matches: <type>(<scope>)!: <description>; scope and ! are optional, type is
+# lowercase, and scope may use letters, digits, dots, underscores, slashes, or
+# hyphens.
+_CONVENTIONAL_PREFIX = (
     r"^(?P<type>[a-z]+)"
     r"(?:\((?P<scope>[a-zA-Z0-9._/-]+)\))?"
     r"(?P<breaking>!)?: "
-    r"(?P<emoji>\S+) "
-    r"(?P<description>.+)$"
 )
 
+CONVENTIONAL_WITH_EMOJI_RE = re.compile(
+    _CONVENTIONAL_PREFIX + r"(?P<emoji>\S+) (?P<description>.+)$"
+)
 CONVENTIONAL_WITHOUT_EMOJI_RE = re.compile(
-    r"^(?P<type>[a-z]+)"
-    r"(?:\((?P<scope>[a-zA-Z0-9._/-]+)\))?"
-    r"(?P<breaking>!)?: "
-    r"(?P<description>.+)$"
+    _CONVENTIONAL_PREFIX + r"(?P<description>.+)$"
 )
 
 DEFAULT_EXAMPLES = (
@@ -52,20 +50,13 @@ def format_rules(
     require_emoji: bool = True,
 ) -> str:
     formatted_examples = "\n".join(f"  {example}" for example in examples)
-    if require_emoji:
-        expected_format = (
-            "  <type>(<scope>): <emoji> <description>\n"
-            "  <type>(<scope>)!: <emoji> <description> (breaking change)\n"
-            "  <type>: <emoji> <description>\n"
-            "  <type>!: <emoji> <description> (breaking change)\n\n"
-        )
-    else:
-        expected_format = (
-            "  <type>(<scope>): <description>\n"
-            "  <type>(<scope>)!: <description> (breaking change)\n"
-            "  <type>: <description>\n"
-            "  <type>!: <description> (breaking change)\n\n"
-        )
+    emoji_part = "<emoji> " if require_emoji else ""
+    expected_format = (
+        f"  <type>(<scope>): {emoji_part}<description>\n"
+        f"  <type>(<scope>)!: {emoji_part}<description> (breaking change)\n"
+        f"  <type>: {emoji_part}<description>\n"
+        f"  <type>!: {emoji_part}<description> (breaking change)\n\n"
+    )
     return (
         "Expected format:\n"
         f"{expected_format}"
