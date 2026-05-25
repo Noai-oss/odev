@@ -66,6 +66,13 @@ def test_pr_title_hook_accepts_no_emoji_with_flag(tmp_path) -> None:
     assert pr_title_hook(["--ignore-emoji", str(pr_title_file)]) == 0
 
 
+def test_pr_title_hook_accepts_no_emoji_with_alias(tmp_path) -> None:
+    pr_title_file = tmp_path / "pr_title.txt"
+    pr_title_file.write_text("feat: add PR title checker", encoding="utf-8")
+
+    assert pr_title_hook(["-i", str(pr_title_file)]) == 0
+
+
 def test_pr_title_hook_reports_pr_title_context(tmp_path, capsys) -> None:
     pr_title_file = tmp_path / "pr_title.txt"
     pr_title_file.write_text("feat: 🐛 wrong emoji", encoding="utf-8")

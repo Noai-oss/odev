@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from odev.git.commit import cli
 
 
@@ -51,6 +53,21 @@ def test_run_commit_saves_successful_message(tmp_path, monkeypatch) -> None:
     assert cache_path.read_text(encoding="utf-8") == "feat: 🎉 add reuse command\n"
 
 
+def test_run_commit_can_signoff(tmp_path, monkeypatch) -> None:
+    commands: list[list[str]] = []
+    cache_path = tmp_path / "last-message"
+
+    def fake_run(command: list[str]):
+        commands.append(command)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(cli, "last_commit_message_path", lambda: cache_path)
+    monkeypatch.setattr(cli.subprocess, "run", fake_run)
+
+    assert cli.run_commit("feat: 🎉 add signoff flag", signoff=True) == 0
+    assert commands == [["git", "commit", "-s", "-F", str(cache_path)]]
+
+
 def test_run_commit_saves_failed_attempt_message(tmp_path, monkeypatch) -> None:
     cache_path = tmp_path / "last-message"
 
@@ -76,7 +93,7 @@ def test_run_commit_rejects_empty_message(monkeypatch, capsys) -> None:
 
 
 def test_reuse_last_commit_message_runs_cached_message(monkeypatch) -> None:
-    used_messages: list[str] = []
+    used_messages: list[tuple[str, bool]] = []
     confirm_defaults: list[bool | None] = []
 
     def fake_confirm(message: str, **kwargs):
@@ -85,17 +102,19 @@ def test_reuse_last_commit_message_runs_cached_message(monkeypatch) -> None:
 
     monkeypatch.setattr(cli, "load_last_commit_message", lambda: "fix: 🐛 retry commit")
     monkeypatch.setattr(
-        cli, "run_commit", lambda message: used_messages.append(message) or 0
+        cli,
+        "run_commit",
+        lambda message, *, signoff: used_messages.append((message, signoff)) or 0,
     )
     monkeypatch.setattr(cli.questionary, "confirm", fake_confirm)
 
     assert cli.reuse_last_commit_message() == 0
-    assert used_messages == ["fix: 🐛 retry commit"]
+    assert used_messages == [("fix: 🐛 retry commit", False)]
     assert confirm_defaults == [None]
 
 
 def test_reuse_last_commit_message_can_be_aborted(monkeypatch) -> None:
-    used_messages: list[str] = []
+    used_messages: list[tuple[str, bool]] = []
     confirm_defaults: list[bool | None] = []
 
     def fake_confirm(message: str, **kwargs):
@@ -104,13 +123,32 @@ def test_reuse_last_commit_message_can_be_aborted(monkeypatch) -> None:
 
     monkeypatch.setattr(cli, "load_last_commit_message", lambda: "fix: 🐛 retry commit")
     monkeypatch.setattr(
-        cli, "run_commit", lambda message: used_messages.append(message) or 0
+        cli,
+        "run_commit",
+        lambda message, *, signoff: used_messages.append((message, signoff)) or 0,
     )
     monkeypatch.setattr(cli.questionary, "confirm", fake_confirm)
 
     assert cli.reuse_last_commit_message() == 0
     assert used_messages == []
     assert confirm_defaults == [None]
+
+
+def test_reuse_last_commit_message_can_signoff(monkeypatch) -> None:
+    used_messages: list[tuple[str, bool]] = []
+
+    monkeypatch.setattr(cli, "load_last_commit_message", lambda: "fix: 🐛 retry commit")
+    monkeypatch.setattr(
+        cli.questionary, "confirm", lambda message: SimpleNamespace(ask=lambda: True)
+    )
+    monkeypatch.setattr(
+        cli,
+        "run_commit",
+        lambda message, *, signoff: used_messages.append((message, signoff)) or 0,
+    )
+
+    assert cli.reuse_last_commit_message(signoff=True) == 0
+    assert used_messages == [("fix: 🐛 retry commit", True)]
 
 
 def test_reuse_last_commit_message_fails_without_cache(monkeypatch, capsys) -> None:
@@ -139,6 +177,7 @@ def test_prompt_commit_message_requires_description(monkeypatch) -> None:
 
     assert cli.prompt_commit_message() == ("fix(cli): 🐛 retry commit", 0)
     assert validators[0]("") == "Description is required."
+    assert validators[0]("retry\ncommit") == "Description must be a single line."
     assert validators[0]("retry commit") is True
 
 
@@ -215,31 +254,74 @@ def test_main_stops_when_prepare_index_aborts(monkeypatch) -> None:
 
 
 def test_main_routes_reuse_command(monkeypatch) -> None:
-    calls: list[str] = []
+    calls: list[tuple[str, bool]] = []
 
     monkeypatch.setattr(cli, "check_inside_git_repo", lambda: True)
     monkeypatch.setattr(cli, "prepare_index", lambda: None)
     monkeypatch.setattr(
-        cli, "reuse_last_commit_message", lambda: calls.append("reuse") or 0
+        cli,
+        "reuse_last_commit_message",
+        lambda *, signoff: calls.append(("reuse", signoff)) or 0,
     )
     monkeypatch.setattr(
         cli, "interactive_commit", lambda: calls.append("interactive") or 0
     )
 
     assert cli.main(["reuse"]) == 0
-    assert calls == ["reuse"]
+    assert calls == [("reuse", False)]
 
 
-def test_main_passes_ignore_emoji_to_interactive_commit(monkeypatch) -> None:
-    include_emoji_values: list[bool] = []
+@pytest.mark.parametrize("argv", [["reuse", "-s"], ["-s", "reuse"]])
+def test_main_routes_reuse_command_with_signoff(
+    argv: list[str],
+    monkeypatch,
+) -> None:
+    calls: list[tuple[str, bool]] = []
+
+    monkeypatch.setattr(cli, "check_inside_git_repo", lambda: True)
+    monkeypatch.setattr(cli, "prepare_index", lambda: None)
+    monkeypatch.setattr(
+        cli,
+        "reuse_last_commit_message",
+        lambda *, signoff: calls.append(("reuse", signoff)) or 0,
+    )
+    monkeypatch.setattr(
+        cli, "interactive_commit", lambda: calls.append("interactive") or 0
+    )
+
+    assert cli.main(argv) == 0
+    assert calls == [("reuse", True)]
+
+
+@pytest.mark.parametrize("flag", ["--ignore-emoji", "-i"])
+def test_main_passes_ignore_emoji_to_interactive_commit(
+    flag: str,
+    monkeypatch,
+) -> None:
+    calls: list[tuple[bool, bool]] = []
 
     monkeypatch.setattr(cli, "check_inside_git_repo", lambda: True)
     monkeypatch.setattr(cli, "prepare_index", lambda: None)
     monkeypatch.setattr(
         cli,
         "interactive_commit",
-        lambda *, include_emoji: include_emoji_values.append(include_emoji) or 0,
+        lambda *, include_emoji, signoff: calls.append((include_emoji, signoff)) or 0,
     )
 
-    assert cli.main(["--ignore-emoji"]) == 0
-    assert include_emoji_values == [False]
+    assert cli.main([flag]) == 0
+    assert calls == [(False, False)]
+
+
+def test_main_passes_signoff_to_interactive_commit(monkeypatch) -> None:
+    calls: list[tuple[bool, bool]] = []
+
+    monkeypatch.setattr(cli, "check_inside_git_repo", lambda: True)
+    monkeypatch.setattr(cli, "prepare_index", lambda: None)
+    monkeypatch.setattr(
+        cli,
+        "interactive_commit",
+        lambda *, include_emoji, signoff: calls.append((include_emoji, signoff)) or 0,
+    )
+
+    assert cli.main(["-s"]) == 0
+    assert calls == [(True, True)]

@@ -58,6 +58,7 @@ def pr_title_hook(argv: Sequence[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        "-i",
         "--ignore-emoji",
         action="store_true",
         help="Allow pull request titles without an emoji and skip emoji validation.",
