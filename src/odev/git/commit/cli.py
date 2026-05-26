@@ -119,7 +119,7 @@ def prompt_commit_message(*, include_emoji: bool = True) -> tuple[str | None, in
     scope = scope.strip()
 
     desc = questionary.text(
-        "Write a short, imperative tense description of the change:",
+        "Write a short, imperative tense description of the change:\n",
         validate=require_description,
     ).ask()
     if desc is None:
