@@ -39,13 +39,12 @@ Personal development helpers focused on git workflows
     check-title:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@v6
+        - uses: actions/setup-python@v6
           with:
-            fetch-depth: 1
-            persist-credentials: false
-  
-        - name: Setup uv
-          uses: astral-sh/setup-uv@v7
+            python-version: '3.13'
+
+        - name: Install odev package
+          run: python -m pip install git+https://github.com/Noai-oss/odev.git@881a3faba06e24bd6895acc27d5dfe7e78fe8175
   
         - name: Check PR Title
           shell: bash -x -e -u -o pipefail {0}
@@ -54,5 +53,5 @@ Personal development helpers focused on git workflows
           run: |
             printf '%s\n' "$GITHUB_PULL_REQUEST_TITLE" > pr_title.txt
             # Add -i/--ignore-emoji after odev-pr-title-check to allow titles without emojis.
-            uvx --from git+https://github.com/Noai-oss/odev.git@881a3faba06e24bd6895acc27d5dfe7e78fe8175 odev-pr-title-check pr_title.txt
+            odev-pr-title-check pr_title.txt
   ```
