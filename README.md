@@ -21,7 +21,7 @@ Personal development helpers focused on git workflows
           name: Custom commit message style check
           entry: odev-commit-msg
           language: python
-          additional_dependencies: ['git+https://github.com/Noai-oss/odev.git@bae63b2adf087857a47621edc1b3d9bbcabc6ee9']
+          additional_dependencies: ['git+https://github.com/Noai-oss/odev.git@632bc674381247cea79f5b3565b73bd27fc212b8']
           # args: [-i]
           stages: [commit-msg]
   ```
@@ -44,7 +44,7 @@ Personal development helpers focused on git workflows
             python-version: '3.13'
 
         - name: Install odev package
-          run: python -m pip install git+https://github.com/Noai-oss/odev.git@bae63b2adf087857a47621edc1b3d9bbcabc6ee9
+          run: python -m pip install git+https://github.com/Noai-oss/odev.git@632bc674381247cea79f5b3565b73bd27fc212b8
   
         - name: Check PR Title
           shell: bash -x -e -u -o pipefail {0}
