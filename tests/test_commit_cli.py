@@ -254,7 +254,7 @@ def test_main_stops_when_prepare_index_aborts(monkeypatch) -> None:
 
 
 def test_main_routes_reuse_command(monkeypatch) -> None:
-    calls: list[tuple[str, bool]] = []
+    calls: list[str | tuple[str, bool]] = []
 
     monkeypatch.setattr(cli, "check_inside_git_repo", lambda: True)
     monkeypatch.setattr(cli, "prepare_index", lambda: None)
@@ -276,7 +276,7 @@ def test_main_routes_reuse_command_with_signoff(
     argv: list[str],
     monkeypatch,
 ) -> None:
-    calls: list[tuple[str, bool]] = []
+    calls: list[str | tuple[str, bool]] = []
 
     monkeypatch.setattr(cli, "check_inside_git_repo", lambda: True)
     monkeypatch.setattr(cli, "prepare_index", lambda: None)
